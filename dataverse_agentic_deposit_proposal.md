@@ -45,21 +45,29 @@ Drafts are private and mutable, so acting on them carries no preservation risk. 
 
 The proposal has two layers. They are separable, and the lower one is useful on its own.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Layer 2 — Guided deposit assistant                     │
-│  Dataverse External Tool (Configure type, dataset scope)│
-│  Multi-agent, human-in-the-loop, proposes change sets   │
-└───────────────────────────┬─────────────────────────────┘
-                            │ consumes
-┌───────────────────────────▼─────────────────────────────┐
-│  Layer 1 — Deterministic metadata validation            │
-│  pyDataverse module. Rule-based, non-throwing,          │
-│  schema-aware, no AI dependency.  (separate issue)      │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  A["Notebook or script"]
+  B["CI pipeline"]
+  C["Batch ingest<br/>CSV, another system"]
+  D["Layer 2 agents"]
+  S["Schema source<br/>to_pydantic (live) / cached / none"]
+  V["Layer 1<br/>validate_dataset_metadata(payload)"]
+  R["Report<br/>ok + findings[]<br/>block · field · code · message · value · allowed"]
+  A --> V
+  B --> V
+  C --> V
+  D --> V
+  S -.-> V
+  V --> R
+  R --> O1["Author fixes every problem in one round"]
+  R --> O2["Build fails with the complete list, offline"]
+  R --> O3["Agents repair and re-validate"]
 ```
 
-Layer 1 is proposed separately as a pyDataverse feature request. It has value independent of Layer 2, and it establishes the correctness authority for Layer 2: the deterministic validator, not the model, determines whether a value is valid.
+Three of the four callers have no relationship to Layer 2.
+
+Layer 1 is proposed separately as a pyDataverse feature request (gdcc/pyDataverse#254). It has value independent of Layer 2, and it establishes the correctness authority for Layer 2: the deterministic validator, not the model, determines whether a value is valid.
 
 Layer 2 is a Dataverse External Tool (`Configure` type, dataset scope), alongside existing tools such as Ask the Data and TurboCurator. It requires no changes to Dataverse core.
 
@@ -103,6 +111,26 @@ In a preservation system these are possible sources of silent corruption. Covera
 ## 6. Interaction model
 
 The unit of interaction is a reviewable change set.
+
+```mermaid
+flowchart TB
+  D["Depositor describes the study<br/>in any language"]
+  P["Agents propose draft metadata<br/>collection · blocks · CV values · terms"]
+  V["Call Layer 1<br/>validate_dataset_metadata()"]
+  K{"findings empty?"}
+  F["Agents repair from findings"]
+  H["Human reviews a per-field diff<br/>accept or reject each item"]
+  W["Write to DRAFT only"]
+  PB["Publish — always an explicit human action"]
+  D --> P
+  P --> V
+  V --> K
+  K -- no --> F
+  F --> P
+  K -- yes --> H
+  H --> W
+  W --> PB
+```
 
 1. The depositor describes the deposit, in any supported language.
 2. Agents produce a proposed change set against the draft.
