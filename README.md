@@ -5,7 +5,7 @@ Public tracking repo for the design proposal:
 **Human-in-the-Loop Agentic Deposit Assistance for Dataverse**
 
 - Full proposal: [`dataverse_agentic_deposit_proposal.md`](./dataverse_agentic_deposit_proposal.md)
-- Upstream pyDataverse Feature Request (Layer 1 validation): to be linked after issue creation
+- Upstream pyDataverse Feature Request (Layer 1 validation): https://github.com/gdcc/pyDataverse/issues/254
 
 ## Layers
 
